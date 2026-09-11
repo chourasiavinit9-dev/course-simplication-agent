@@ -1,0 +1,22 @@
+# Environment credentials — never commit this file
+.env
+
+# Python virtual environment
+.venv/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# HuggingFace model cache (large, re-downloadable)
+# Uncomment if you want to exclude it from the repo:
+# .cache/
+
+# Streamlit runtime files
+.streamlit/
+
+# macOS
+.DS_Store

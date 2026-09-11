@@ -1,0 +1,6 @@
+streamlit
+ibm-watsonx-ai
+sentence-transformers
+numpy
+python-dotenv
+textstat

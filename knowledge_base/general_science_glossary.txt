@@ -1,0 +1,23 @@
+Hypothesis
+A hypothesis is a testable, falsifiable prediction or explanation for an observed phenomenon, formulated before an experiment is conducted. A well-constructed hypothesis specifies the independent variable (what is manipulated), the dependent variable (what is measured), and the expected relationship between them. Scientific hypotheses are evaluated by designing controlled experiments and analysing empirical evidence.
+
+Osmosis
+Osmosis is the passive movement of water molecules across a semi-permeable membrane from a region of lower solute concentration (higher water potential) to a region of higher solute concentration (lower water potential), continuing until equilibrium is reached. Osmosis is fundamental to cell biology: it governs turgor pressure in plant cells and the regulation of water balance in animal cells.
+
+Entropy
+In thermodynamics, entropy is a measure of the degree of disorder or randomness in a system. The Second Law of Thermodynamics states that the total entropy of an isolated system can only increase over time, meaning spontaneous processes move toward greater disorder. In information theory, entropy measures the average information content (uncertainty) in a probability distribution.
+
+Photosynthesis
+Photosynthesis is the biological process by which chlorophyll-containing organisms — primarily plants, algae, and cyanobacteria — convert light energy into chemical energy stored as glucose. The overall reaction combines carbon dioxide and water in the presence of sunlight: 6CO₂ + 6H₂O + light energy → C₆H₁₂O₆ + 6O₂. It occurs in two stages: the light-dependent reactions in the thylakoid membranes and the Calvin cycle in the stroma.
+
+Catalyst
+A catalyst is a substance that increases the rate of a chemical reaction by providing an alternative reaction pathway with a lower activation energy, without being consumed or permanently altered in the process. Enzymes are biological catalysts — proteins that accelerate biochemical reactions in living organisms by binding substrates at their active site and stabilising the transition state.
+
+DNA (Deoxyribonucleic Acid)
+DNA is the double-stranded helical molecule that encodes the genetic instructions for the development, functioning, and reproduction of all known living organisms. Each strand is a polymer of nucleotides, each nucleotide containing a deoxyribose sugar, a phosphate group, and one of four nitrogenous bases: adenine (A), thymine (T), guanine (G), or cytosine (C). Complementary base pairing (A–T, G–C) holds the two strands together and enables faithful replication.
+
+Momentum
+Momentum is a vector quantity defined as the product of an object's mass and its velocity (p = mv). Newton's Second Law can be restated as: the net force on an object equals the rate of change of its momentum. The Law of Conservation of Momentum states that the total momentum of a closed system remains constant unless acted on by an external net force.
+
+Electromagnetic Spectrum
+The electromagnetic spectrum encompasses all frequencies of electromagnetic radiation, from low-frequency radio waves through microwaves, infrared radiation, visible light, ultraviolet radiation, X-rays, to high-frequency gamma rays. All electromagnetic waves travel at the speed of light in a vacuum (c ≈ 3 × 10⁸ m/s) and differ only in wavelength and frequency. The visible spectrum — the narrow band detectable by the human eye — spans approximately 380–700 nanometres.

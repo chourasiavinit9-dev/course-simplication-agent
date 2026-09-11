@@ -1,0 +1,23 @@
+Algorithm
+An algorithm is a finite, ordered set of well-defined instructions or rules designed to solve a problem or accomplish a task. Algorithms are evaluated by their time complexity (how execution steps scale with input size) and space complexity (how memory usage scales). Common examples include sorting algorithms such as QuickSort and MergeSort, and search algorithms such as binary search.
+
+Big-O Notation
+Big-O notation is a mathematical notation used to describe the upper bound of an algorithm's running time or space requirements as a function of input size. It characterises the worst-case growth rate, ignoring constant factors and lower-order terms. For example, O(n log n) describes the time complexity of efficient comparison-based sorting, while O(1) describes constant-time access such as indexing into an array.
+
+Recursion
+Recursion is a programming technique in which a function calls itself with a smaller or simpler version of its original input, continuing until it reaches a base case that terminates the chain. It is commonly used for problems that can be broken into sub-problems of the same type, such as computing factorials, traversing tree structures, or implementing divide-and-conquer algorithms.
+
+Neural Network
+A neural network is a computational model loosely inspired by the structure of biological brains. It consists of layers of interconnected nodes (neurons), each applying a weighted sum of its inputs followed by a non-linear activation function. Training adjusts the weights via backpropagation and gradient descent to minimise a loss function. Deep neural networks with many hidden layers are the foundation of modern machine learning and AI systems.
+
+Application Programming Interface (API)
+An API is a defined contract — typically a set of function signatures, endpoints, or protocols — through which one piece of software exposes its functionality to another. REST APIs communicate over HTTP using standard methods (GET, POST, PUT, DELETE) and return data in formats such as JSON or XML. APIs enable modular software design by separating implementation details from the interface presented to consumers.
+
+Binary Search
+Binary search is an efficient algorithm for locating a target value within a sorted array. It works by repeatedly halving the search space: comparing the target to the middle element and discarding the half that cannot contain the target. It achieves O(log n) time complexity, making it far faster than linear search (O(n)) for large sorted datasets.
+
+Hash Table
+A hash table (also called a hash map) is a data structure that maps keys to values using a hash function to compute an index into an array of buckets. In the best case it provides O(1) average time for insertion, deletion, and lookup. Collisions — when two keys map to the same bucket — are handled by techniques such as chaining (storing a linked list at each bucket) or open addressing.
+
+Machine Learning
+Machine learning is a subfield of artificial intelligence in which systems learn patterns from data rather than being explicitly programmed with rules. Supervised learning trains models on labeled input-output pairs; unsupervised learning finds structure in unlabeled data; reinforcement learning trains agents via reward signals. The learned model is then used to make predictions or decisions on new, unseen data.
