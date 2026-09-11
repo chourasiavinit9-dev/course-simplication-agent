@@ -8,6 +8,8 @@ Responsibilities:
   - Initialise ibm_watsonx_ai Credentials + ModelInference once (singleton)
   - Build a level-aware, RAG-grounded prompt
   - Call model.generate_text() and return the trimmed result
+  - Generate quiz questions from simplified text (Quiz Generator Agent)
+  - Translate simplified output to a target language (Language Toggle)
 
 All text generation goes through this module — no other LLM provider is used
 anywhere in the project.
@@ -39,7 +41,7 @@ except ImportError:
 _model: ModelInference = None  # initialised once by _get_model()
 
 # ---------------------------------------------------------------------------
-# Level-specific instruction strings used in the prompt
+# Level-specific instruction strings used in the simplification prompt
 # ---------------------------------------------------------------------------
 _LEVEL_INSTRUCTIONS: Dict[str, str] = {
     "Beginner": (
@@ -64,6 +66,17 @@ _LEVEL_INSTRUCTIONS: Dict[str, str] = {
     ),
 }
 
+# ---------------------------------------------------------------------------
+# Supported output languages for the Language Toggle feature
+# ---------------------------------------------------------------------------
+SUPPORTED_LANGUAGES = {
+    "English":  None,           # no translation needed
+    "Hindi":    "Hindi",
+    "Tamil":    "Tamil",
+    "Bengali":  "Bengali",
+    "Marathi":  "Marathi",
+}
+
 
 # ---------------------------------------------------------------------------
 # Singleton initialisation
@@ -77,7 +90,7 @@ def _get_model() -> ModelInference:
       WATSONX_API_KEY      — IBM Cloud API key
       WATSONX_PROJECT_ID   — watsonx.ai project GUID
       WATSONX_URL          — regional endpoint (e.g. https://us-south.ml.cloud.ibm.com)
-      WATSONX_MODEL_ID     — Granite model ID (e.g. ibm/granite-3-8b-instruct)
+      WATSONX_MODEL_ID     — Granite model ID (e.g. ibm/granite-4-h-small)
 
     Raises
     ------
@@ -92,7 +105,7 @@ def _get_model() -> ModelInference:
     api_key    = os.getenv("WATSONX_API_KEY")
     project_id = os.getenv("WATSONX_PROJECT_ID")
     url        = os.getenv("WATSONX_URL")
-    model_id   = os.getenv("WATSONX_MODEL_ID", "ibm/granite-3-8b-instruct")
+    model_id   = os.getenv("WATSONX_MODEL_ID", "ibm/granite-4-h-small")
 
     missing = []
     if not api_key:
@@ -117,7 +130,7 @@ def _get_model() -> ModelInference:
         credentials=credentials,
         project_id=project_id,
         params={
-            "max_new_tokens": 800,
+            "max_new_tokens": 900,
             "temperature": 0.4,
             "repetition_penalty": 1.1,
             "decoding_method": DecodingMethods.SAMPLE.value,
@@ -128,7 +141,7 @@ def _get_model() -> ModelInference:
 
 
 # ---------------------------------------------------------------------------
-# Prompt builder
+# Prompt builders
 # ---------------------------------------------------------------------------
 
 def build_prompt(
@@ -137,7 +150,7 @@ def build_prompt(
     context_chunks: List[Dict],
 ) -> str:
     """
-    Construct the full prompt sent to the Granite model.
+    Construct the simplification prompt sent to Granite.
 
     Parameters
     ----------
@@ -147,18 +160,17 @@ def build_prompt(
         One of "Beginner", "Intermediate", or "Expert".
     context_chunks : List[Dict]
         Retrieved RAG chunks, each with keys "chunk" and "source".
-        May be an empty list if no relevant chunks were found.
 
     Returns
     -------
     str
-        The complete prompt string ready to pass to model.generate_text().
+        Complete prompt string for model.generate_text().
     """
     level_instruction = _LEVEL_INSTRUCTIONS.get(
         level, _LEVEL_INSTRUCTIONS["Intermediate"]
     )
 
-    # --- RAG context section ---------------------------------------------------
+    # RAG context section
     if context_chunks:
         context_lines = []
         for i, item in enumerate(context_chunks, start=1):
@@ -178,7 +190,6 @@ def build_prompt(
             "Do not invent facts."
         )
 
-    # --- Full prompt -----------------------------------------------------------
     prompt = f"""You are an expert educational content writer. Your task is to rewrite academic text to make it more accessible, while preserving complete factual accuracy.
 
 STRICT RULES:
@@ -197,12 +208,89 @@ ORIGINAL TEXT TO REWRITE:
 
 REWRITTEN EXPLANATION:
 """
+    return prompt
 
+
+def build_quiz_prompt(simplified_text: str, level: str) -> str:
+    """
+    Build a prompt for the Quiz Generator Agent.
+
+    Generates 3 check-your-understanding questions from the simplified text,
+    calibrated to the chosen comprehension level.
+
+    Parameters
+    ----------
+    simplified_text : str
+        The already-simplified explanation (Key Terms section stripped).
+    level : str
+        Comprehension level — affects question difficulty.
+
+    Returns
+    -------
+    str
+        Prompt string for model.generate_text().
+    """
+    difficulty_map = {
+        "Beginner":     "simple recall and basic comprehension questions (who/what/why)",
+        "Intermediate": "application and explanation questions requiring a short answer",
+        "Expert":       "analysis and evaluation questions requiring precise technical answers",
+    }
+    difficulty = difficulty_map.get(level, difficulty_map["Intermediate"])
+
+    prompt = f"""You are a Quiz Generator Agent. Your job is to create exactly 3 check-your-understanding questions based ONLY on the text provided below.
+
+RULES:
+1. Generate exactly 3 questions — no more, no less.
+2. Questions must be answerable from the text alone — do not ask about outside knowledge.
+3. Use this question difficulty level: {difficulty}
+4. Format your output EXACTLY like this (no extra text before or after):
+Q1: [question text]
+Q2: [question text]
+Q3: [question text]
+
+TEXT TO GENERATE QUESTIONS FROM:
+{simplified_text}
+
+QUESTIONS:
+"""
+    return prompt
+
+
+def build_translation_prompt(text: str, target_language: str) -> str:
+    """
+    Build a prompt for translating simplified output into a target language.
+
+    Parameters
+    ----------
+    text : str
+        The full simplified output including Key Terms section.
+    target_language : str
+        One of: Hindi, Tamil, Bengali, Marathi.
+
+    Returns
+    -------
+    str
+        Prompt string for model.generate_text().
+    """
+    prompt = f"""You are a professional educational translator. Translate the following simplified academic explanation into {target_language}.
+
+RULES:
+1. Translate ALL text including the "Key Terms Explained:" section.
+2. Keep technical/scientific terms in English within parentheses after their {target_language} translation where appropriate, so learners can cross-reference.
+3. Preserve the original formatting and structure exactly.
+4. Do not add any preamble — output the translated text directly.
+5. Maintain an encouraging, accessible tone appropriate for students.
+
+TEXT TO TRANSLATE:
+{text}
+
+{target_language.upper()} TRANSLATION:
+"""
     return prompt
 
 
 # ---------------------------------------------------------------------------
-# Public simplification function
+# Public agent functions
 # ---------------------------------------------------------------------------
 
 def simplify(
@@ -211,22 +299,13 @@ def simplify(
     context_chunks: List[Dict],
 ) -> str:
     """
-    Simplify *original_text* at the given comprehension *level* using the
-    IBM watsonx.ai Granite model, grounded by the provided *context_chunks*.
-
-    Parameters
-    ----------
-    original_text : str
-        Dense academic text to be rewritten.
-    level : str
-        "Beginner", "Intermediate", or "Expert".
-    context_chunks : List[Dict]
-        Retrieved RAG chunks from rag_utils.retrieve().
+    Simplify *original_text* at the given comprehension *level* using
+    IBM watsonx.ai Granite, grounded by *context_chunks*.
 
     Returns
     -------
     str
-        The model's output — rewritten explanation plus "Key Terms Explained:" section.
+        Rewritten explanation plus "Key Terms Explained:" bullet section.
 
     Raises
     ------
@@ -244,8 +323,77 @@ def simplify(
         raise RuntimeError(
             f"watsonx.ai model call failed: {exc}\n"
             "Check your WATSONX_URL and WATSONX_API_KEY, and ensure the model "
-            f"'{os.getenv('WATSONX_MODEL_ID', 'ibm/granite-3-8b-instruct')}' is "
+            f"'{os.getenv('WATSONX_MODEL_ID', 'ibm/granite-4-h-small')}' is "
             "available in your region."
         ) from exc
 
     return result.strip() if result else ""
+
+
+def generate_quiz(simplified_text: str, level: str) -> List[str]:
+    """
+    Quiz Generator Agent — produce 3 comprehension questions from
+    *simplified_text* calibrated to *level*.
+
+    Parameters
+    ----------
+    simplified_text : str
+        The main body of the simplified explanation (Key Terms stripped).
+    level : str
+        "Beginner", "Intermediate", or "Expert".
+
+    Returns
+    -------
+    List[str]
+        List of 3 question strings. Returns an empty list on failure.
+    """
+    model = _get_model()
+    prompt = build_quiz_prompt(simplified_text, level)
+
+    try:
+        result = model.generate_text(prompt=prompt)
+    except Exception:
+        return []
+
+    if not result:
+        return []
+
+    # Parse Q1: / Q2: / Q3: lines
+    questions = []
+    for line in result.strip().splitlines():
+        line = line.strip()
+        if line.startswith("Q1:") or line.startswith("Q2:") or line.startswith("Q3:"):
+            q_text = line.split(":", 1)[-1].strip()
+            if q_text:
+                questions.append(q_text)
+
+    return questions[:3]  # cap at 3
+
+
+def translate_output(text: str, target_language: str) -> str:
+    """
+    Language Toggle — translate *text* into *target_language* using Granite.
+
+    Parameters
+    ----------
+    text : str
+        Full simplified output to translate.
+    target_language : str
+        One of: Hindi, Tamil, Bengali, Marathi.
+
+    Returns
+    -------
+    str
+        Translated text string. Returns original text on failure.
+    """
+    if target_language not in SUPPORTED_LANGUAGES or SUPPORTED_LANGUAGES[target_language] is None:
+        return text  # English — no translation needed
+
+    model = _get_model()
+    prompt = build_translation_prompt(text, target_language)
+
+    try:
+        result = model.generate_text(prompt=prompt)
+        return result.strip() if result else text
+    except Exception:
+        return text  # graceful fallback — return original if translation fails

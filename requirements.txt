@@ -4,3 +4,4 @@ sentence-transformers
 numpy
 python-dotenv
 textstat
+fpdf2
